@@ -4,17 +4,99 @@
 
   const TARGET = new Date("2026-10-30T20:00:00+05:30").getTime();
 
-  // Initialize your custom audio here.
+  // Initialize your custom audio
   const backgroundPath = new Audio('audio/Path.mp3');
   backgroundPath.loop = true;
+  
+  // Track if music is currently supposed to be playing
+  let isMusicPlaying = false; 
 
   function init() {
     makePetals();
     startCountdown();
     bindMusic();
     bindStartOver();
+    bindSplashScreen();
+    handleTabVisibility();
   }
 
+  // --- SPLASH SCREEN LOGIC ---
+  function bindSplashScreen() {
+    const splash = document.getElementById("splash");
+    const splashBtn = document.getElementById("splash-btn");
+    if (!splash) return;
+
+    // Lock scrolling while splash screen is visible
+    document.body.style.overflow = "hidden";
+
+    function enterInvitation() {
+      if (splash.classList.contains("hidden")) return;
+      
+      // Hide splash and restore scrolling
+      splash.classList.add("hidden");
+      document.body.style.overflow = "";
+      
+      // Start music
+      playMusic();
+    }
+
+    // Only enter via button click
+    if (splashBtn) {
+      splashBtn.addEventListener("click", enterInvitation);
+    }
+  }
+
+  // --- TAB VISIBILITY LOGIC (Stops audio when leaving site) ---
+  function handleTabVisibility() {
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        // Tab is hidden, pause audio
+        backgroundPath.pause();
+      } else {
+        // Tab is active again, resume audio ONLY IF it was playing before
+        if (isMusicPlaying) {
+          backgroundPath.play().catch(() => {});
+        }
+      }
+    });
+  }
+
+  // --- MUSIC CONTROLS ---
+  function playMusic() {
+    const btn = document.querySelector("[data-music]");
+    backgroundPath.play().then(() => {
+      isMusicPlaying = true;
+      if (btn) {
+        btn.classList.add("is-on");
+        btn.setAttribute("aria-pressed", "true");
+        btn.setAttribute("aria-label", "Mute invitation music");
+      }
+    }).catch((err) => {
+      console.warn("Autoplay blocked by browser.", err);
+    });
+  }
+
+  function bindMusic() {
+    const btn = document.querySelector("[data-music]");
+    if (!btn) return;
+
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (isMusicPlaying) {
+        // Mute
+        backgroundPath.pause();
+        isMusicPlaying = false;
+        btn.classList.remove("is-on");
+        btn.setAttribute("aria-pressed", "false");
+        btn.setAttribute("aria-label", "Play invitation music");
+      } else {
+        // Play
+        playMusic();
+      }
+    });
+  }
+
+  // --- VISUAL & COUNTDOWN FUNCTIONS ---
   function makePetals() {
     const root = document.querySelector("[data-petals]");
     if (!root || root.childElementCount) return;
@@ -53,50 +135,6 @@
   function startCountdown() {
     renderCountdown();
     window.setInterval(renderCountdown, 1000);
-  }
-
-  function bindMusic() {
-    const btn = document.querySelector("[data-music]");
-    if (!btn) return;
-    let on = false;
-
-    // Helper function to handle playing and updating the button UI
-    function playMusic() {
-      backgroundPath.play().then(() => {
-        on = true;
-        btn.classList.add("is-on");
-        btn.setAttribute("aria-pressed", "true");
-        btn.setAttribute("aria-label", "Mute invitation music");
-      }).catch((err) => {
-        console.warn("Autoplay blocked by browser. Awaiting user interaction.", err);
-      });
-    }
-
-    // Handle button clicks
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation(); // Prevent the body click listener from immediately refiring
-      if (on) {
-        backgroundPath.pause();
-        on = false;
-        btn.classList.remove("is-on");
-        btn.setAttribute("aria-pressed", "false");
-        btn.setAttribute("aria-label", "Play invitation music");
-      } else {
-        playMusic();
-      }
-    });
-
-    // 1. Attempt to autoplay immediately on load
-    playMusic();
-
-    // 2. Fallback: Start music on the very first user interaction (click/tap) anywhere on the page
-    document.body.addEventListener("click", function startOnFirstInteraction() {
-      if (!on) {
-        playMusic();
-      }
-      // Remove this listener after the first click so it doesn't run again
-      document.body.removeEventListener("click", startOnFirstInteraction);
-    }, { once: true });
   }
 
   function bindStartOver() {
