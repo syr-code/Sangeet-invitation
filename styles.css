@@ -53,7 +53,38 @@ a {
   color: inherit;
   text-decoration: none;
 }
+/* ========================================================= */
+/* SCROLL DOWN REMINDER PROMPT                               */
+/* ========================================================= */
+.scroll-prompt {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #5d3a7d;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 0.6rem 1.5rem;
+  border-radius: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  pointer-events: none; /* Let them scroll right through it if they click it */
+  opacity: 1;
+  transition: opacity 0.4s ease;
+  animation: pulseText 2s ease-in-out infinite;
+}
 
+/* Hidden state for when they are actively scrolling */
+.scroll-prompt.hidden {
+  opacity: 0;
+}
+
+@keyframes pulseText {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, 8px); }
+}
 .page {
   display: flex;
   min-height: 100dvh;

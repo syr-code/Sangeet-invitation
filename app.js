@@ -18,6 +18,7 @@
     bindStartOver();
     bindSplashScreen();
     handleTabVisibility();
+    bindScrollPrompt();
   }
 
   // --- SPLASH SCREEN LOGIC ---
@@ -38,6 +39,10 @@
       
       // Start music
       playMusic();
+
+      // Show the scroll prompt immediately on the cover page
+      const prompt = document.getElementById("scroll-prompt");
+      if (prompt) prompt.classList.remove("hidden");
     }
 
     // Only enter via button click
@@ -130,6 +135,36 @@
     set("hours", hours);
     set("minutes", minutes);
     set("seconds", seconds);
+  }
+
+  // --- INACTIVITY SCROLL PROMPT ---
+  function bindScrollPrompt() {
+    const prompt = document.getElementById("scroll-prompt");
+    if (!prompt) return;
+
+    let scrollTimeout;
+
+    function showPrompt() {
+      // Don't show the prompt if they've reached the very bottom of the invite
+      const isAtBottom = (window.innerHeight + window.scrollY) >= document.body.offsetHeight - 100;
+      
+      // Also don't show it if the splash screen is still visible
+      const splash = document.getElementById("splash");
+      const isSplashVisible = splash && !splash.classList.contains("hidden");
+
+      if (!isAtBottom && !isSplashVisible) {
+        prompt.classList.remove("hidden");
+      }
+    }
+
+    // Hide prompt immediately when they start scrolling
+    window.addEventListener("scroll", () => {
+      prompt.classList.add("hidden");
+      
+      // Reset the 5-second timer
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(showPrompt, 5000);
+    });
   }
 
   function startCountdown() {
